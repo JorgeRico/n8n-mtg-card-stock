@@ -1,0 +1,512 @@
+{
+  "name": "1.- Check New Sets",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        -896
+      ],
+      "id": "4b6521fc-bffc-4add-8b48-36d7546dda88",
+      "name": "When clicking ‘Execute workflow’",
+      "notesInFlow": true,
+      "notes": "Run"
+    },
+    {
+      "parameters": {
+        "url": "https://api.scryfall.com/sets",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json;q=0.9,*/*;q=0.8"
+            },
+            {
+              "name": "User-Agent",
+              "value": "local card stock"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        32,
+        -704
+      ],
+      "id": "8418fccc-4ec2-47c9-904a-0ceddc85bb7a",
+      "name": "HTTP Request",
+      "alwaysOutputData": false,
+      "notesInFlow": true,
+      "notes": "Get Sets"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.digital }}",
+                    "rightValue": false,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    },
+                    "id": "265c4866-4e64-4842-819e-96dc73873c7f"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "paper"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ab902e78-51b2-4b0f-8016-a0c32ec16b8e",
+                    "leftValue": "={{ $json.digital }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "online"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "fallbackOutput": 0
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        448,
+        -704
+      ],
+      "id": "ffd86086-7844-4e93-9a73-6b3b26620c42",
+      "name": "Switch",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select setAbrv from mtgSet",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        96,
+        -1040
+      ],
+      "id": "673da2bd-15b0-42f2-9465-3751be246b01",
+      "name": "Execute a SQL query",
+      "notesInFlow": true,
+      "credentials": {
+        "mySql": {
+          "id": "SQHN7VjXL5Pgbd6y",
+          "name": "MySQL account"
+        }
+      },
+      "notes": "database sets abrv"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "code, name, released_at, card_count, scryfall_uri, icon_svg_uri",
+        "options": {
+          "destinationFieldName": "setAbrv, setName, setReleaseDate, setTotalCards, setLink, setLogo"
+        }
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        960,
+        -720
+      ],
+      "id": "01f0a69d-f5de-47c9-88f0-0678f6c848ee",
+      "name": "Split Out1",
+      "notesInFlow": true,
+      "notes": "setAbrv - scryfall"
+    },
+    {
+      "parameters": {
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "setAbrv",
+              "field2": "setAbrv"
+            }
+          ]
+        },
+        "resolve": "preferInput2",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.compareDatasets",
+      "typeVersion": 2.3,
+      "position": [
+        1200,
+        -1168
+      ],
+      "id": "98af2d3a-1710-45c1-8381-c53ab264d27d",
+      "name": "Compare Datasets"
+    },
+    {
+      "parameters": {
+        "sendTo": "jorge.rico.garriga@gmail.com",
+        "subject": "New sets found",
+        "message": "=items nuevos: {{ $json.object.length }}\n<ul>\n{{ $json.object.map(item => {\nreturn `<li>${item}</li>`\n}).join('\\n') }}\n</ul>\n",
+        "options": {
+          "senderName": "MTG card stock app"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1936,
+        -896
+      ],
+      "id": "d41ebf39-ee7e-4b13-9e4d-b0ec491c1a01",
+      "name": "Send a message",
+      "webhookId": "0a29b1db-6274-4eb5-bae1-16ea7b5f6d7d",
+      "alwaysOutputData": false,
+      "executeOnce": true,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "PNcj8BGcwAPazGyk",
+          "name": "Gmail account"
+        }
+      },
+      "notes": "Send email resume"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# Loop over input items and add a new field called 'my_new_field' to the JSON of each one\nreturn {\n    \"object\": [item['json']['setAbrv'] for item in _items]\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1504,
+        -1088
+      ],
+      "id": "4fb063ff-2c35-4e19-a5cd-f3af17f639b7",
+      "name": "Code in Python"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        224,
+        -704
+      ],
+      "id": "e77b5c80-c4dc-40b3-82ec-45a63934fd3b",
+      "name": "Split Out",
+      "alwaysOutputData": false,
+      "notesInFlow": true,
+      "notes": "List of sets"
+    },
+    {
+      "parameters": {
+        "table": {
+          "__rl": true,
+          "value": "mtgSet",
+          "mode": "list",
+          "cachedResultName": "mtgSet"
+        },
+        "dataMode": "defineBelow",
+        "valuesToSend": {
+          "values": [
+            {
+              "column": "setName",
+              "value": "={{ $json.setName }}"
+            },
+            {
+              "column": "setAbrv",
+              "value": "={{ $json.setAbrv }}"
+            },
+            {
+              "column": "setLink",
+              "value": "={{ $json.setLink }}"
+            },
+            {
+              "column": "setLogo",
+              "value": "={{ $json.setLogo }}"
+            },
+            {
+              "column": "setTotalCards",
+              "value": "={{ $json.setTotalCards }}"
+            },
+            {
+              "column": "setReleaseDate",
+              "value": "={{ $json.setReleaseDate }}"
+            }
+          ]
+        },
+        "options": {
+          "detailedOutput": true
+        }
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        1360,
+        -816
+      ],
+      "id": "924b379c-0961-46bf-a95c-3d9a00a6b1ce",
+      "name": "Insert rows in a table",
+      "executeOnce": false,
+      "notesInFlow": true,
+      "alwaysOutputData": false,
+      "credentials": {
+        "mySql": {
+          "id": "SQHN7VjXL5Pgbd6y",
+          "name": "MySQL account"
+        }
+      },
+      "notes": "insert new set info - no cards"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.card_count }}",
+                    "rightValue": 0,
+                    "operator": {
+                      "type": "number",
+                      "operation": "gt"
+                    },
+                    "id": "efcbbbd6-2e25-47ce-8449-6fdbe157b849"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        736,
+        -720
+      ],
+      "id": "76f22f2e-e853-4a98-8651-67ab78681f08",
+      "name": "Switch2",
+      "notesInFlow": true,
+      "notes": "Remote empty sets"
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch"
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1712,
+        -896
+      ],
+      "id": "c49be312-d875-450d-91d8-e211cedbe06f",
+      "name": "Merge"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Switch2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Compare Datasets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "Compare Datasets",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Compare Datasets": {
+      "main": [
+        [],
+        [],
+        [],
+        [
+          {
+            "node": "Code in Python",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Insert rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in Python": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch2": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert rows in a table": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "04f9679f-a6fe-44e7-85ec-699084c7eaa9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "62b2ba6bffca55d0c0d44db4515fd6d66ff38f38497f149db2d614aaa558e777"
+  },
+  "id": "qTKazWFMAeetjqCc",
+  "tags": []
+}

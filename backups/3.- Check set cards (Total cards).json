@@ -1,0 +1,520 @@
+{
+  "name": "3.- Check set cards (Total cards)",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        -560
+      ],
+      "id": "14160a95-60c9-4573-82ca-79ad81f7db9a",
+      "name": "When clicking ‘Execute workflow’",
+      "notesInFlow": true,
+      "notes": "Run"
+    },
+    {
+      "parameters": {
+        "url": "https://api.scryfall.com/sets",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -80,
+        -432
+      ],
+      "id": "733ac880-2e56-402f-8bb3-8a4a091f340d",
+      "name": "HTTP Request",
+      "alwaysOutputData": false,
+      "notesInFlow": true,
+      "notes": "Get Sets"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select \n  mtgSet.id, \n  mtgSet.setAbrv, \n  mtgSet.setTotalCards as totalCards\n  from mtgSet",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -80,
+        -816
+      ],
+      "id": "27c389ec-3b0e-41f7-a15d-94aaf91da5b0",
+      "name": "Execute a SQL query",
+      "notesInFlow": true,
+      "credentials": {
+        "mySql": {
+          "id": "SQHN7VjXL5Pgbd6y",
+          "name": "MySQL account"
+        }
+      },
+      "notes": "database sets abrv"
+    },
+    {
+      "parameters": {
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "setAbrv",
+              "field2": "setAbrv"
+            },
+            {
+              "field1": "totalCards",
+              "field2": "totalCards"
+            }
+          ]
+        },
+        "resolve": "preferInput1",
+        "options": {
+          "multipleMatches": "all"
+        }
+      },
+      "type": "n8n-nodes-base.compareDatasets",
+      "typeVersion": 2.3,
+      "position": [
+        880,
+        -816
+      ],
+      "id": "f6bb7ad5-776a-47d9-8ddd-286c8c3f3142",
+      "name": "Compare Datasets"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        80,
+        -560
+      ],
+      "id": "749bf8c7-37fc-4856-9169-0f7cb3756913",
+      "name": "Split Out",
+      "alwaysOutputData": false,
+      "notesInFlow": true,
+      "notes": "List of sets"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "id, setAbrv, totalCards",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        208,
+        -816
+      ],
+      "id": "abb55da5-a9ab-44df-8dbe-2bc00da44730",
+      "name": "Split Out2"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.digital }}",
+                    "rightValue": 0,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "false",
+                      "singleValue": true
+                    },
+                    "id": "5b313adf-1046-4ffe-a631-ef0c666960e9"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "looseTypeValidation": "=",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        -560
+      ],
+      "id": "548d3b8e-0020-47e0-a473-a632b7300d19",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.card_count }}",
+                    "rightValue": 0,
+                    "operator": {
+                      "type": "number",
+                      "operation": "gt"
+                    },
+                    "id": "93c3b401-b8b6-4aab-b63e-a97ad81c53e1"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "not empty"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "69352f82-b23e-4bd2-ad3f-391cf3f3f788",
+                    "leftValue": "={{ $json.card_count }}",
+                    "rightValue": 0,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "empty sets"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        -560
+      ],
+      "id": "eae79e58-fecc-4715-b0cb-07f3e0d6eac4",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "cards = []\n\nfor item in _items:\n  cards.append( \n    { \n      'setAbrv'    : item['json']['code'],\n      'totalCards' : item['json']['card_count']\n    }\n  )\n\nreturn cards"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        768,
+        -576
+      ],
+      "id": "dbd780ca-68fb-49ce-9bb9-2ed3e953f161",
+      "name": "Code in Python1"
+    },
+    {
+      "parameters": {
+        "sendTo": "jorge.rico.garriga@gmail.com",
+        "subject": "Sets and cards to update",
+        "message": "=Total sets with differences: {{ $json.object.length }}\n<ul>\n{{ $json.object.map(item => {\nreturn `<li>\nid: ${item.json.id} - \n${item.json.setAbrv} --> db(${item.json.totalDbCards}) -- scryfall(${item.json.totalCards })\n\n</li>`\n}).join('\\n') }}\n</ul>\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2304,
+        -704
+      ],
+      "id": "f70f2790-ce34-48e2-81d2-9b8d0497ff0e",
+      "name": "Send a message",
+      "webhookId": "b5c590b2-7513-4386-ab37-8f4b61b4d51e",
+      "executeOnce": true,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "PNcj8BGcwAPazGyk",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT idSet as id, count(mtgCard.id) as totalDbCards FROM mtgCard WHERE mtgCard.idSet = {{ $json.id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        1360,
+        -800
+      ],
+      "id": "ed0331c2-af93-4ff8-8306-93ecdf1806ae",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "mySql": {
+          "id": "SQHN7VjXL5Pgbd6y",
+          "name": "MySQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "setAbrv",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1152,
+        -512
+      ],
+      "id": "de1f3958-23a8-45b9-b24d-6dc2988a83e2",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "id",
+        "joinMode": "enrichInput1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1648,
+        -704
+      ],
+      "id": "bf1b01a4-5b48-41ff-b4f7-04fa2f446ff3",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "\n\nreturn { 'object': _items}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1856,
+        -704
+      ],
+      "id": "5f21fe9d-aabb-47e4-a37f-1e57faeb6707",
+      "name": "Code in Python"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Split Out2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compare Datasets": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [],
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out2": {
+      "main": [
+        [
+          {
+            "node": "Compare Datasets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Code in Python1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Code in Python1": {
+      "main": [
+        [
+          {
+            "node": "Compare Datasets",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Code in Python",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in Python": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "2e611a83-538f-4743-aace-09ec06ad0983",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "62b2ba6bffca55d0c0d44db4515fd6d66ff38f38497f149db2d614aaa558e777"
+  },
+  "id": "QmLizG1B74o1eYZA",
+  "tags": []
+}

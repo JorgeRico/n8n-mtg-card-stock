@@ -1,0 +1,282 @@
+{
+  "name": "5.- Update set cards (owned and special)",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        -80
+      ],
+      "id": "7709d587-79da-4f2d-bcff-b049df57266e",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select \n  mtgCard.idSet,\n  count(mtgCard.id) as total,\n  mtgSet.setTotalOwnedCards\n  from mtgCard\n  inner join mtgSet on mtgSet.id = mtgCard.idSet\nwhere mtgCard.own = 1\ngroup by mtgCard.idSet\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        224,
+        -272
+      ],
+      "id": "897a3c60-3b26-4591-8d47-6a644820f6c6",
+      "name": "Execute a SQL query",
+      "notesInFlow": true,
+      "credentials": {
+        "mySql": {
+          "id": "SQHN7VjXL5Pgbd6y",
+          "name": "MySQL account"
+        }
+      },
+      "notes": "Own total cards"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select \n  mtgCard.idSet,\n  count(mtgCard.id) as total,\n  mtgSet.setTotalSpecialCards\n  from mtgCard\n  inner join mtgSet on mtgSet.id = mtgCard.idSet\nwhere mtgCard.special = 1\ngroup by mtgCard.idSet\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        224,
+        48
+      ],
+      "id": "ec3ba122-6a78-4847-af93-9c9faa66c4bf",
+      "name": "Execute a SQL query1",
+      "notesInFlow": true,
+      "credentials": {
+        "mySql": {
+          "id": "SQHN7VjXL5Pgbd6y",
+          "name": "MySQL account"
+        }
+      },
+      "notes": "Special total cards"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# Loop over input items and add a new field called 'my_new_field' to the JSON of each one\nresult = []\nfor item in _items:\n  if item[\"json\"][\"total\"] != item[\"json\"][\"setTotalOwnedCards\"]:\n    result.append(item)\nreturn { 'object': result }"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        -272
+      ],
+      "id": "ba6fc916-613b-4674-b4f9-c81269ee270d",
+      "name": "Code in Python"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# Loop over input items and add a new field called 'my_new_field' to the JSON of each one\nresult = []\nfor item in _items:\n  if item[\"json\"][\"total\"] != item[\"json\"][\"setTotalSpecialCards\"]:\n    result.append(item)\nreturn { 'object': result }"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        48
+      ],
+      "id": "1de4d514-96c1-47e1-b259-f7c1163431e1",
+      "name": "Code in Python1"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{ \n  $json.object\n    .map(item => {\n      return `UPDATE mtgSet SET setTotalOwnedCards = ${item.json.total} WHERE id = ${item.json.idSet};`\n    })\n    .join('\\n')\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        736,
+        -192
+      ],
+      "id": "792483f1-d820-4554-8bfc-1b83d4b3941f",
+      "name": "Execute a SQL query2",
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "SQHN7VjXL5Pgbd6y",
+          "name": "MySQL account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{ \n  $json.object\n    .map(item => {\n      return `UPDATE mtgSet SET setTotalSpecialCards = ${item.json.total} WHERE id = ${item.json.idSet};`\n    })\n    .join('\\n')\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        736,
+        176
+      ],
+      "id": "ae36ffcd-4108-4941-bc87-4715b750fba4",
+      "name": "Execute a SQL query3",
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "SQHN7VjXL5Pgbd6y",
+          "name": "MySQL account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "sendTo": "jorge.rico.garriga@gmail.com",
+        "subject": "Update owned num cards",
+        "message": "=Total sets to update owned cards: {{ $json.object.length }} <ul> {{ $json.object.map(item => { return `<li> id: ${item.json.idSet} - total: ${item.json.total }  </li>` }).join('\\n') }} </ul>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        736,
+        -352
+      ],
+      "id": "4c5f7c39-395d-4f9c-8f47-11bddff30223",
+      "name": "Send a message",
+      "webhookId": "dc67269c-40c4-4691-9aba-972a878a96dd",
+      "executeOnce": true,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "PNcj8BGcwAPazGyk",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "jorge.rico.garriga@gmail.com",
+        "subject": "Update special num cards",
+        "message": "=Total sets to update special cards: {{ $json.object.length }} <ul> {{ $json.object.map(item => { return `<li> id: ${item.json.idSet} - total: ${item.json.total }  </li>` }).join('\\n') }} </ul>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        736,
+        16
+      ],
+      "id": "0bb87bfc-79d6-4241-ac51-8dbd34c6cc97",
+      "name": "Send a message1",
+      "webhookId": "77585203-85d5-4d5b-b958-51aff0710597",
+      "executeOnce": true,
+      "alwaysOutputData": false,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "PNcj8BGcwAPazGyk",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Code in Python",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query1": {
+      "main": [
+        [
+          {
+            "node": "Code in Python1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in Python": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in Python1": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Execute a SQL query3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query2": {
+      "main": [
+        []
+      ]
+    },
+    "Send a message1": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "3548690f-8bd9-4a9e-be61-d7d0d9565f94",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "62b2ba6bffca55d0c0d44db4515fd6d66ff38f38497f149db2d614aaa558e777"
+  },
+  "id": "wqyczeYy0HEoTjOW",
+  "tags": []
+}

@@ -1,0 +1,155 @@
+{
+  "name": "6.- Delete sets",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a0fd8d77-e039-489a-8c02-f421e7b5f794",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DELETE FROM mtgCard WHERE idSet = {{ $json.idSet }}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        512,
+        0
+      ],
+      "id": "92a404ad-d1f1-4a66-a719-7ece6f282500",
+      "name": "Execute a SQL query",
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "SQHN7VjXL5Pgbd6y",
+          "name": "MySQL account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0353b90c-def6-477c-9bab-225ed88b3eaf",
+              "name": "idSet",
+              "value": 1,
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "625fd20e-bf2a-4deb-b99e-da087d43f8d5",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DELETE FROM mtgSet WHERE id = {{ $json.idSet }}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        576,
+        -224
+      ],
+      "id": "d23a1423-5069-44c7-848f-af410b18e39e",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "mySql": {
+          "id": "SQHN7VjXL5Pgbd6y",
+          "name": "MySQL account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        368,
+        -224
+      ],
+      "id": "f55fd2c3-f8ee-40e7-aa24-67658f74a933",
+      "name": "Wait",
+      "webhookId": "2f4dad99-8fad-4996-a203-32a71b9e47ec"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        []
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "aedf45a4-9594-4da1-9004-11a26fcf1ddf",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "62b2ba6bffca55d0c0d44db4515fd6d66ff38f38497f149db2d614aaa558e777"
+  },
+  "id": "xUgacC0zFh0lVwn4",
+  "tags": []
+}

@@ -1,0 +1,190 @@
+{
+  "name": "2.- Update set image logos",
+  "nodes": [
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {
+          "destinationFieldName": ""
+        }
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        144,
+        400
+      ],
+      "id": "d0c99099-f5d1-414a-af21-afc0b30910ab",
+      "name": "Split Out",
+      "alwaysOutputData": false,
+      "notesInFlow": true,
+      "notes": "List of sets"
+    },
+    {
+      "parameters": {
+        "url": "https://api.scryfall.com/sets",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json;q=0.9,*/*;q=0.8"
+            },
+            {
+              "name": "User-Agent",
+              "value": "local card stock"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -96,
+        400
+      ],
+      "id": "981a21e8-5e4a-4fb9-b75d-006bc8b4059a",
+      "name": "HTTP Request",
+      "alwaysOutputData": false,
+      "notesInFlow": true,
+      "notes": "Get Sets"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -352,
+        400
+      ],
+      "id": "3e9ecd2b-0463-4734-ae39-4ecf7e7b8329",
+      "name": "When clicking ‘Execute workflow’",
+      "notesInFlow": true,
+      "notes": "Run"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "code, icon_svg_uri",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        368,
+        400
+      ],
+      "id": "cf6a0250-eb20-4209-b3db-8dc94e1b5ff7",
+      "name": "Split Out1",
+      "notesInFlow": true,
+      "notes": "icon sets"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "table": {
+          "__rl": true,
+          "value": "mtgSet",
+          "mode": "list",
+          "cachedResultName": "mtgSet"
+        },
+        "dataMode": "defineBelow",
+        "columnToMatchOn": "setAbrv",
+        "valueToMatchOn": "={{ $json.code }}",
+        "valuesToSend": {
+          "values": [
+            {
+              "column": "setLogo",
+              "value": "={{ $json.icon_svg_uri }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        592,
+        400
+      ],
+      "id": "6655c8d3-8ac0-458c-b2c5-e1bce5c8d93e",
+      "name": "Update rows in a table",
+      "notesInFlow": true,
+      "executeOnce": false,
+      "credentials": {
+        "mySql": {
+          "id": "SQHN7VjXL5Pgbd6y",
+          "name": "MySQL account"
+        }
+      },
+      "notes": "Update logos"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "Update rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "ac1502e0-d905-4bc3-8599-e0bea1892c28",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "62b2ba6bffca55d0c0d44db4515fd6d66ff38f38497f149db2d614aaa558e777"
+  },
+  "id": "QDc7oVeazrCJe1Yh",
+  "tags": []
+}
